@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Room {
+  id           String        @id @default(uuid())
+  name         String
+  wordList     String[]
+  winRatio     Float
+  createdAt    DateTime      @default(now())
+  participants Participant[]
+  rounds       Round[]
+  messages     Message[]
+}
+
+model Player {
+  id           String        @id @default(uuid())
+  name         String
+  ipAddress    String
+  createdAt    DateTime      @default(now())
+  participants Participant[]
+  messages     Message[]
+  votesCast    Vote[]        @relation("Voter")
+  votesGiven   Vote[]        @relation("Voted")
+  Round        Round[]
+}
+
+model Participant {
+  id       String @id @default(uuid())
+  room     Room   @relation(fields: [roomId], references: [id])
+  roomId   String
+  player   Player @relation(fields: [playerId], references: [id])
+  playerId String
+}
+
+model Message {
+  id       String   @id @default(uuid())
+  room     Room     @relation(fields: [roomId], references: [id])
+  roomId   String
+  player   Player   @relation(fields: [playerId], references: [id])
+  playerId String
+  message  String
+  sentAt   DateTime @default(now())
+}
+
+model Round {
+  id         String   @id @default(uuid())
+  room       Room     @relation(fields: [roomId], references: [id])
+  roomId     String
+  word       String
+  imposter   Player   @relation(fields: [imposterId], references: [id])
+  imposterId String
+  roundIndex Int
+  startedAt  DateTime @default(now())
+  votes      Vote[]
+}
+
+model Vote {
+  id      String @id @default(uuid())
+  round   Round  @relation(fields: [roundId], references: [id])
+  roundId String
+  voter   Player @relation("Voter", fields: [voterId], references: [id])
+  voterId String
+  voted   Player @relation("Voted", fields: [votedId], references: [id])
+  votedId String
+}
